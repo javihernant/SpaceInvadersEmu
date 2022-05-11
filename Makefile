@@ -2,7 +2,7 @@ SRC_DIR := src
 OBJ_DIR := obj
 BIN_DIR := .
 
-SRCS = 8080emu.c main.c
+SRCS = 8080emu.c main.c machine.c
 OBJS = $(SRCS:.c=.o)
 TARG = emulator
 CC = gcc

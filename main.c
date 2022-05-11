@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "8080emu.h"
+#include "machine.h"
+#include <stdint.h>
 
 int main (int argc, char **argv)
 {
@@ -25,7 +27,21 @@ int main (int argc, char **argv)
 
     while (state.pc < fsize)
     {
-        Emulate8080Op(&state);
+        uint8_t *opcode = &state.memory[state.pc];
+
+        if (*opcode == 0xdb) {
+            uint8_t port = opcode[1];
+            machine_in(&state, port);
+            state.pc += 1;
+            
+        }else if (*opcode == 0xd3) {
+            uint8_t port = opcode[1];
+            machine_out(&state, port);
+            state.pc += 1;
+        }else{
+            Emulate8080Op(&state);
+        }
+
         printState(&state);
     }
     return 0;

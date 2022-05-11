@@ -1,3 +1,5 @@
+#ifndef REGS_H
+#define REGS_H
 #include <stdint.h>
 
 typedef struct ConditionCodes
@@ -26,3 +28,4 @@ typedef struct State8080
     uint8_t int_enable;
 } State8080;
 
+#endif
