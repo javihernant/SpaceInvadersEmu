@@ -6,26 +6,18 @@
 
 int main (int argc, char **argv)
 {
-    FILE *f= fopen(argv[1], "rb");
-    if (f==NULL)
+    if (argc < 2)
     {
-        printf("error: Couldn't open %s\n", argv[1]);
+        printf("init_machine: error, no rom was provided\n");
         exit(1);
     }
 
-    //Get the file size and read it into a memory buffer
-    fseek(f, 0L, SEEK_END);
-    int fsize = ftell(f);
-    fseek(f, 0L, SEEK_SET);
-
-    unsigned char *buffer=malloc(fsize);
-
-    fread(buffer, fsize, 1, f);
-    fclose(f);
+    unsigned char *buffer = init_machine(argv[1]);
 
     State8080 state = StateCreat(buffer);
 
-    while (state.pc < fsize)
+    //TODO: change running condition. Right now it is hardcoded to 0x4000
+    while (state.pc < 0x4000)
     {
         uint8_t *opcode = &state.memory[state.pc];
 
@@ -44,5 +36,7 @@ int main (int argc, char **argv)
 
         printState(&state);
     }
+
+    free(buffer);
     return 0;
 }
