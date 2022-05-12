@@ -8,6 +8,16 @@ static uint8_t shift_val = 0;
 void machine_in(State8080 *st, int port)
 {
     switch(port){
+        case 0:
+        {
+            st->a = 1;
+            break;
+        }
+        case 1:
+        {
+            st->a = 0;
+            break;
+        }
         case 3:
         {
             st->a = shift_val >> (8-shift_offset) ;
