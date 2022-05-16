@@ -2,18 +2,19 @@ SRC_DIR := src
 OBJ_DIR := obj
 BIN_DIR := .
 
-SRCS = 8080emu.c main.c machine.c
+LDLIBS = -lSDL2
+SRCS = 8080emu.c main.c machine.c screen.c
 OBJS = $(SRCS:.c=.o)
 TARG = emulator
 CC = gcc
-OPTS = -Wall -O
+CFLAGS = -Wall -O
 
 all: $(TARG)
 $(TARG): $(OBJS)
-	$(CC) -o $(TARG) $(OBJS)
+	$(CC) -o $(TARG) $(OBJS) $(LDLIBS)
 
 %.o: %.c
-	$(CC) $(OPTS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ 
 
 clean: 
 	rm -f $(OBJS) $(TARG)
