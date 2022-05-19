@@ -17,7 +17,8 @@ static uint8_t shift_val = 0;
 
 unsigned char *init_machine(char *rom_path)
 {
-    unsigned char *mem = calloc(0x4000, 1);
+    //TODO:probar con malloc(0x4000);
+    unsigned char *mem = calloc(0x5FFF, 1);
     FILE *f= fopen(rom_path, "rb");
     if (f==NULL)
     {
@@ -55,8 +56,8 @@ void machine_in(State8080 *st, int port)
         case 3:
         {
             st->a = shift_val >> (8-shift_offset) ;
+            break;
         }
-        break;
     }
 }
 

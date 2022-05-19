@@ -47,7 +47,7 @@ int main (int argc, char **argv)
             Emulate8080Op(&state);
         }
 
-        printState(&state);
+        //printState(&state);
         render_bf_2(vram);
     }
 

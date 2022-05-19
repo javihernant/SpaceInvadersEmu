@@ -73,7 +73,7 @@ int render_bf_2(unsigned char *vram)
 {
 
     bit2byte_parse(vram);
-    SDL_UpdateTexture(g_texture, NULL, g_buffer, g_width);
+    SDL_UpdateTexture(g_texture, NULL, (void *) g_buffer, g_width);
     SDL_RenderClear(g_renderer);
     SDL_RenderCopy(g_renderer, g_texture, NULL, NULL);
     SDL_RenderPresent(g_renderer);
