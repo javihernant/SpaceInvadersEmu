@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "8080emu.h"
+#include "machine.h" //IN and OUT
 
 int parity(int n, int size)
 {
@@ -209,6 +210,23 @@ void CPI(State8080 *st, uint8_t byte)
     uint16_t res = st->a - byte;
     set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG);
     st->pc += 1;
+}
+
+void PUSH(uint8_t h, uint8_t l, uint8_t *mem, uint16_t *sp)
+{
+    mem[*sp-1] = h;
+    mem[*sp-2] = l;
+    *sp -= 2;
+}
+
+void DI(uint8_t *ints)
+{
+    *ints = 0;    
+}
+
+void EI(uint8_t *ints)
+{
+    *ints = 1;    
 }
  
 //////////////////////////////////////////////////////
@@ -821,7 +839,7 @@ void Emulate8080Op(State8080 *state)
         case 0xd2: UnimplementedInstruction(state); break;
         case 0xd3: 
         {
-            state->pc++;
+            machine_out(state, opcode[1]);
             break;
         }
         case 0xd4: UnimplementedInstruction(state); break;
@@ -837,7 +855,11 @@ void Emulate8080Op(State8080 *state)
         case 0xd8: UnimplementedInstruction(state); break;
         case 0xd9: UnimplementedInstruction(state); break;
         case 0xda: UnimplementedInstruction(state); break;
-        case 0xdb: UnimplementedInstruction(state); break;
+        case 0xdb: //IN b (machine specific)
+        {
+            machine_in(state, opcode[1]);
+            break;
+        }
         case 0xdc: UnimplementedInstruction(state); break;
         case 0xdd: UnimplementedInstruction(state); break;
         case 0xde: UnimplementedInstruction(state); break;

@@ -17,8 +17,7 @@ static uint8_t shift_val = 0;
 
 unsigned char *init_machine(char *rom_path)
 {
-    //TODO:probar con malloc(0x4000);
-    unsigned char *mem = calloc(0x5FFF, 1);
+    unsigned char *mem = calloc(0x4000, 1);
     FILE *f= fopen(rom_path, "rb");
     if (f==NULL)
     {
@@ -59,6 +58,7 @@ void machine_in(State8080 *st, int port)
             break;
         }
     }
+    st->pc += 1;
 }
 
 void machine_out(State8080 *st, int port)
@@ -76,4 +76,5 @@ void machine_out(State8080 *st, int port)
         }
         break;
     }
+    st->pc += 1;
 }

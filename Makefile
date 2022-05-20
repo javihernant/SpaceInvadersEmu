@@ -7,7 +7,7 @@ SRCS = 8080emu.c main.c machine.c screen.c
 OBJS = $(SRCS:.c=.o)
 TARG = emulator
 CC = gcc
-CFLAGS = -Wall -O
+CFLAGS = -Wall -O -g
 
 all: $(TARG)
 $(TARG): $(OBJS)

@@ -1,12 +1,8 @@
 ## TODO:
-* Implement interrupts (whenever a timer goes off)
+* Create InvadersView (screen to show game). 256x224 at 60Hz, read at 0x2400.
+(http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html)
 * Key mappings
-* `8080emu.c` contains the definition of each of the 8080 instructions. There are instructions like `ADD X` where `X`
-can be different values. They are essentially the same; however, they are defined repeateadly throughout the code. You
-want only one definition of the function that allows you to pass it whatever `X` may be.
-
-* `8080emu.c` uses function `set_flags` in order to set the flags whenever an instruction requires it. In previous
-versions, this function didn't exist and code was repeated everywhere. There's still some of the old code floating
-around. Find it and use the function!
+* Refactor `8080emu.c` instructions into functions
+* Use function pointers for hw instructions like IN or OUT
 
 * check `set_flags` function
