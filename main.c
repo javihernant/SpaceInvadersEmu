@@ -4,17 +4,19 @@
 #include "machine.h"
 #include <stdint.h>
 #include "screen.h"
+#include "tests.h"
+#include <unistd.h> //getopt()
 
-int main (int argc, char **argv)
+void help_msg()
 {
+    printf("Commands:\n");
+    printf("\t -t: perform tests\n");
+    printf("\t -f <rom>: load rom\n");
+}
 
-    if (argc < 2)
-    {
-        printf("error, no rom was provided\n");
-        return 1;
-    }
-
-    unsigned char *buffer = init_machine(argv[1]);
+void run_cpu(char *path)
+{
+    unsigned char *buffer = init_machine(path);
     unsigned char *vram = &buffer[0x2400];
 
     State8080 state = StateCreat(buffer);
@@ -39,6 +41,33 @@ int main (int argc, char **argv)
 
     screen_off();
     free(buffer);
+}
+
+int main (int argc, char **argv)
+{
+    char *file_pth = NULL;
+    int test_fg = 0;
+    char c;
+    while((c = getopt(argc, argv, "tf:")) != -1) {
+
+        switch(c) {
+            case 't':
+                test_fg = 1;
+                break;
+            case 'f':
+                file_pth = optarg;
+                break;
+        }
+    }
+
+    if (test_fg){
+        //TODO:test rom load
+        test_cpu();
+    }else if (file_pth != NULL){
+        run_cpu(file_pth);
+    }else{
+        help_msg();
+    }
 
     return 0;
 }
