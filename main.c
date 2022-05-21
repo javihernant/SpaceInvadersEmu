@@ -4,7 +4,7 @@
 #include "machine.h"
 #include <stdint.h>
 #include "screen.h"
-#include "tests.h"
+#include "tests.h" //test_cpu()
 #include <unistd.h> //getopt()
 
 void help_msg()
