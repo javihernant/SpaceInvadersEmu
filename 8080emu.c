@@ -55,6 +55,8 @@ void printState(State8080 *st)
     st->int_enable);
     ConditionCodes cc = st->cc;
     printf("Z=%d\tS=%d\tP=%d\tCY=%d\nAC=%d\tPAD=%d\n",cc.z, cc.s, cc.p, cc.cy, cc.ac, cc.pad);
+    //"PC=%04X SP=%04X AF=%04X BC=%04X DE=%04X HL=%04X INTE=%01X"
+    //trace inv_regs.tr,0,noloop,{tracelog "PC=%04X SP=%04X AF=%04X BC=%04X DE=%04X HL=%04X INTE=%d",PC,SP,AF,BC,DE,HL,INTE}
  
 }
 
@@ -228,7 +230,84 @@ void EI(uint8_t *ints)
 {
     *ints = 1;    
 }
+
+void JMP(State8080 *st, uint16_t addr)
+{
+    st->pc = addr;
+}
  
+void JZ(State8080 *st, uint16_t addr)
+{
+    if (st->cc.z){
+        st->pc = addr;
+    }else{
+        st->pc += 2;
+    }
+}
+
+void JNC(State8080 *st, uint16_t addr)
+{
+    if (st->cc.cy == 0){
+        st->pc = addr;
+    }else{
+        st->pc += 2;
+    }
+}
+
+void JPE(State8080 *st, uint16_t addr)
+{
+    if (st->cc.p){
+        st->pc = addr;
+    }else{
+        st->pc += 2;
+    }
+}
+
+void JPO(State8080 *st, uint16_t addr)
+{
+    if (st->cc.p == 0){
+        st->pc = addr;
+    }else{
+        st->pc += 2;
+    }
+}
+
+void JP(State8080 *st, uint16_t addr)
+{
+    if (st->cc.s == 0){
+        st->pc = addr;
+    }else{
+        st->pc += 2;
+    }
+}
+
+void JM(State8080 *st, uint16_t addr)
+{
+    if (st->cc.s){
+        st->pc = addr;
+    }else{
+        st->pc += 2;
+    }
+}
+void JC(State8080 *st, uint16_t addr)
+{
+    if (st->cc.cy){
+        st->pc = addr;
+    }else{
+        st->pc += 2;
+    }
+}
+
+void XTHL(State8080 *st)
+{
+    uint8_t *mem = &st->memory[st->sp];
+    uint8_t tmp_h = st->h;
+    uint8_t tmp_l = st->l;
+    st->h = mem[1];
+    st->l = mem[0];
+    mem[1] = tmp_h;
+    mem[0] = tmp_l;
+}
 //////////////////////////////////////////////////////
 
 void Emulate8080Op(State8080 *state)
@@ -776,8 +855,8 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xc3: 
         {
-            uint16_t adr = (opcode[2] << 8)| opcode[1];
-            state->pc = adr;
+            uint16_t addr = (opcode[2] << 8)| opcode[1];
+            JMP(state, addr);
             break;
         }
         case 0xc4: UnimplementedInstruction(state); break;
@@ -807,7 +886,12 @@ void Emulate8080Op(State8080 *state)
             RET(state);
             break;
         }
-        case 0xca: UnimplementedInstruction(state); break;
+        case 0xca:
+        {
+            uint16_t addr = (opcode[2] << 8)| opcode[1];
+            JZ(state, addr);
+            break;
+        }
         case 0xcb: UnimplementedInstruction(state); break;
         case 0xcc: UnimplementedInstruction(state); break;
         case 0xcd:
@@ -836,7 +920,12 @@ void Emulate8080Op(State8080 *state)
             state->sp += 2;
             break;
         }
-        case 0xd2: UnimplementedInstruction(state); break;
+        case 0xd2:
+        {
+            uint16_t addr = (opcode[2] << 8)| opcode[1];
+            JNC(state, addr);
+            break;
+        }
         case 0xd3: 
         {
             machine_out(state, opcode[1]);
@@ -854,7 +943,12 @@ void Emulate8080Op(State8080 *state)
         case 0xd7: UnimplementedInstruction(state); break;
         case 0xd8: UnimplementedInstruction(state); break;
         case 0xd9: UnimplementedInstruction(state); break;
-        case 0xda: UnimplementedInstruction(state); break;
+        case 0xda:
+        {
+            uint16_t addr = (opcode[2] << 8)| opcode[1];
+            JC(state, addr);
+            break;
+        }
         case 0xdb: //IN b (machine specific)
         {
             machine_in(state, opcode[1]);
@@ -872,8 +966,17 @@ void Emulate8080Op(State8080 *state)
             state->sp += 2;
             break;
         }
-        case 0xe2: UnimplementedInstruction(state); break;
-        case 0xe3: UnimplementedInstruction(state); break;
+        case 0xe2:
+        {
+            uint16_t addr = (opcode[2] << 8)| opcode[1];
+            JPO(state, addr);
+            break;
+        }
+        case 0xe3:
+        {
+            XTHL(state);
+            break;
+        }
         case 0xe4: UnimplementedInstruction(state); break;
         case 0xe5:
         {
@@ -895,7 +998,12 @@ void Emulate8080Op(State8080 *state)
         case 0xe7: UnimplementedInstruction(state); break;
         case 0xe8: UnimplementedInstruction(state); break;
         case 0xe9: UnimplementedInstruction(state); break;
-        case 0xea: UnimplementedInstruction(state); break;
+        case 0xea:
+        {
+            uint16_t addr = (opcode[2] << 8)| opcode[1];
+            JPE(state, addr);
+            break;
+        }
         case 0xeb: 
         {
             uint8_t tmp1 = state->d;
@@ -925,7 +1033,12 @@ void Emulate8080Op(State8080 *state)
             state->sp += 2;
             break;
         }
-        case 0xf2: UnimplementedInstruction(state); break;
+        case 0xf2:
+        {
+            uint16_t addr = (opcode[2] << 8)| opcode[1];
+            JP(state, addr);
+            break;
+        }
         case 0xf3: UnimplementedInstruction(state); break;
         case 0xf4: UnimplementedInstruction(state); break;
         case 0xf5: 
@@ -941,7 +1054,12 @@ void Emulate8080Op(State8080 *state)
         case 0xf7: UnimplementedInstruction(state); break;
         case 0xf8: UnimplementedInstruction(state); break;
         case 0xf9: UnimplementedInstruction(state); break;
-        case 0xfa: UnimplementedInstruction(state); break;
+        case 0xfa:
+        {
+            uint16_t addr = (opcode[2] << 8)| opcode[1];
+            JM(state, addr);
+            break;
+        }
         case 0xfb: 
         {
             state->int_enable = 1;
