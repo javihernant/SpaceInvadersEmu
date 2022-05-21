@@ -15,7 +15,7 @@ static uint8_t shift_val = 0;
     4000- RAM mirror (Not implemented. Is it needed?)
 */
 
-unsigned char *init_machine(char *rom_path)
+unsigned char *load_rom(char *rom_path, int offset)
 {
     unsigned char *mem = calloc(0x4000, 1);
     FILE *f= fopen(rom_path, "rb");
@@ -30,7 +30,7 @@ unsigned char *init_machine(char *rom_path)
     int fsize = ftell(f);
     fseek(f, 0L, SEEK_SET);
 
-    size_t written = fread(mem, 1, fsize, f);
+    size_t written = fread(&mem[offset], 1, fsize, f);
     if (written != fsize){
         printf("fread: error reading to buffer\n");
     }

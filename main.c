@@ -16,7 +16,7 @@ void help_msg()
 
 void run_cpu(char *path)
 {
-    unsigned char *buffer = init_machine(path);
+    unsigned char *buffer = load_rom(path, 0x00);
     unsigned char *vram = &buffer[0x2400];
 
     State8080 state = StateCreat(buffer);

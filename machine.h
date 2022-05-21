@@ -4,7 +4,7 @@
 
 void machine_in(State8080 *st, int port);
 void machine_out(State8080 *st, int port);
-unsigned char *init_machine();
+unsigned char *load_rom(char *path, int offset);
 
 #endif
     
