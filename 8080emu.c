@@ -92,13 +92,40 @@ void UnimplementedInstruction(State8080 *state)
     exit(1);
 }
 
+void CPI(State8080 *st, uint8_t byte)
+{
+    uint16_t res = st->a - byte;
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG);
+    st->cc.cy = ~st->cc.cy;
+    st->pc += 1;
+}
+
+void SUB(State8080 *st, uint8_t byte)
+{
+    uint16_t res = st->a - byte;
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG);
+    st->cc.cy = ~st->cc.cy;
+    st->a = res & 0xff;
+    st->pc += 1;
+}
+
+void SBB(State8080 *st, uint8_t byte)
+{
+    uint16_t res = st->a - byte - st->cc.cy;
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG);
+    st->cc.cy = ~st->cc.cy;
+    st->a = res & 0xff;
+    st->pc += 1;
+}
+
 void MVI(uint8_t *reg, uint8_t val, uint16_t *pc)
 {
             *reg = val;
             *pc += 1;
 }
 
-void RET(State8080 *st){
+void RET(State8080 *st)
+{
 
     st->pc = (st->memory[st->sp+1]<<8) | st->memory[st->sp];
     st->sp += 2;
@@ -191,12 +218,6 @@ void DCR(uint8_t *reg, ConditionCodes *cc){
     set_flags(cc, *reg, 8, Z_FG|S_FG|P_FG|AC_FG);
 }
 
-void CPI(State8080 *st, uint8_t byte)
-{
-    uint16_t res = st->a - byte;
-    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG);
-    st->pc += 1;
-}
 
 void PUSH(uint8_t h, uint8_t l, uint8_t *mem, uint16_t *sp)
 {
@@ -660,22 +681,88 @@ void Emulate8080Op(State8080 *state)
         case 0x8d: UnimplementedInstruction(state); break;
         case 0x8e: UnimplementedInstruction(state); break;
         case 0x8f: UnimplementedInstruction(state); break;
-        case 0x90: UnimplementedInstruction(state); break;
-        case 0x91: UnimplementedInstruction(state); break;
-        case 0x92: UnimplementedInstruction(state); break;
-        case 0x93: UnimplementedInstruction(state); break;
-        case 0x94: UnimplementedInstruction(state); break;
-        case 0x95: UnimplementedInstruction(state); break;
-        case 0x96: UnimplementedInstruction(state); break;
-        case 0x97: UnimplementedInstruction(state); break;
-        case 0x98: UnimplementedInstruction(state); break;
-        case 0x99: UnimplementedInstruction(state); break;
-        case 0x9a: UnimplementedInstruction(state); break;
-        case 0x9b: UnimplementedInstruction(state); break;
-        case 0x9c: UnimplementedInstruction(state); break;
-        case 0x9d: UnimplementedInstruction(state); break;
-        case 0x9e: UnimplementedInstruction(state); break;
-        case 0x9f: UnimplementedInstruction(state); break;
+        case 0x90:
+        {
+            SUB(state, state->b);
+            break;
+        }
+        case 0x91:
+        {
+            SUB(state, state->c);
+            break;
+        }
+        case 0x92:
+        {
+            SUB(state, state->d);
+            break;
+        }
+        case 0x93:
+        {
+            SUB(state, state->e);
+            break;
+        }
+        case 0x94:
+        {
+            SUB(state, state->h);
+            break;
+        }
+        case 0x95:
+        {
+            SUB(state, state->l);
+            break;
+        }
+        case 0x96:
+        {
+            uint16_t offset = (state->h << 8) | state->l;
+            SUB(state, state->memory[offset]);
+            break;
+        }
+        case 0x97:
+        {
+            SUB(state, state->a);
+            break;
+        }
+        case 0x98:
+        {
+            SBB(state, state->b);
+            break;
+        }
+        case 0x99:
+        {
+            SBB(state, state->c);
+            break;
+        }
+        case 0x9a:
+        {
+            SBB(state, state->d);
+            break;
+        }
+        case 0x9b:
+        {
+            SBB(state, state->e);
+            break;
+        }
+        case 0x9c:
+        {
+            SBB(state, state->h);
+            break;
+        }
+        case 0x9d:
+        {
+            SBB(state, state->l);
+            break;
+        }
+        case 0x9e:
+        {
+            uint16_t offset = (state->h << 8) | state->l;
+            SBB(state, state->memory[offset]);
+            break;
+        }
+        case 0x9f:
+        {
+            SBB(state, state->a);
+            break;
+        }
         case 0xa0:
         {
             state->a = state->a & state->b;
