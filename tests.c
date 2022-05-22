@@ -14,10 +14,10 @@ void test_cpu()
             if (st.c == 2){
                 putchar(st.e);
             }else if (st.c == 9){
-                char *ch = (char *) &st.memory[(st.d << 8) | st.e];
+                unsigned char *ch = &st.memory[(st.d << 8) | st.e];
                 while(*ch != '$'){
                     putchar(*ch);
-                    *ch += 1;
+                    ch += 1;
                 }
             }
             st.pc += 1;

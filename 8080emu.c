@@ -172,34 +172,18 @@ void DAD(State8080 *st, char x)
     set_flags(&st->cc, res, 16, CY_FG);
 }
 
-void LXI(State8080 *st, char x){
-    unsigned char *opcode = &st->memory[st->pc];
-    switch(x){
-        case 'B':
-        {
-            st->b = opcode[2];
-            st->c = opcode[1];
-            break;
-        }
-        case 'D':
-        {
-            st->d = opcode[2];
-            st->e = opcode[1];
-            break;
-        }
-        case 'H':
-        {
-            st->h = opcode[2];
-            st->l = opcode[1];
-            break;
-        }
-        case 'S'://SP
-        {
-            st->sp = (opcode[2]<<8)|opcode[1];
-            break;
-        }
-    }
-    st->pc += 2;
+void LXI(uint8_t *h, uint8_t *l, uint8_t new_h, uint8_t new_l, uint16_t *pc)
+{
+    *h = new_h;
+    *l = new_l;
+    *pc += 2;
+}
+
+
+void LXI_SP(uint16_t *sp, uint8_t sp_h, uint8_t sp_l, uint16_t *pc)
+{
+    *sp = (sp_h<<8)|sp_l;
+    *pc += 2;
 }
 
 void DCR(uint8_t *reg, ConditionCodes *cc){
@@ -319,7 +303,7 @@ void Emulate8080Op(State8080 *state)
     {
         case 0x00: break;
         case 0x01:
-            LXI(state, 'B');
+            LXI(&state->b, &state->c, opcode[2], opcode[1], &state->pc);
             break;
         case 0x02: UnimplementedInstruction(state); break;
         case 0x03:
@@ -369,7 +353,7 @@ void Emulate8080Op(State8080 *state)
         case 0x10: UnimplementedInstruction(state); break;
         case 0x11: 
         {
-            LXI(state, 'D');
+            LXI(&state->d, &state->e, opcode[2], opcode[1], &state->pc);
             break;
         }
         case 0x12: UnimplementedInstruction(state); break;
@@ -423,7 +407,7 @@ void Emulate8080Op(State8080 *state)
         case 0x20: UnimplementedInstruction(state); break;
         case 0x21: 
         {
-            LXI(state,'H');
+            LXI(&state->h, &state->l, opcode[2], opcode[1], &state->pc);
             break;
         }
         case 0x22: UnimplementedInstruction(state); break;
@@ -475,7 +459,7 @@ void Emulate8080Op(State8080 *state)
         case 0x30: UnimplementedInstruction(state); break;
         case 0x31: 
         {
-            LXI(state,'S');
+            LXI_SP(&state->sp, opcode[2], opcode[1], &state->pc);
             break;
         }
         case 0x32: 
