@@ -82,6 +82,16 @@ void set_flags(ConditionCodes *cc, int result, int size, int flags){
     }
 }
 
+void set_cy_sub(ConditionCodes *cc, int a, int b)
+{
+    if (b > a){
+        cc->cy = 1;
+    }else{
+        cc->cy = 0;
+    }
+}
+        
+
 ////////////////////8080 instructions//////////////////
 
 void UnimplementedInstruction(State8080 *state)
@@ -95,16 +105,18 @@ void UnimplementedInstruction(State8080 *state)
 void CPI(State8080 *st, uint8_t byte)
 {
     uint16_t res = st->a - byte;
-    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG);
-    st->cc.cy = ~st->cc.cy;
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG);
+    set_cy_sub(&st->cc, st->a, byte);
+        
     st->pc += 1;
 }
 
 void SUB(State8080 *st, uint8_t byte)
 {
     uint16_t res = st->a - byte;
-    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG);
-    st->cc.cy = ~st->cc.cy;
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG);
+    set_cy_sub(&st->cc, st->a, byte);
+    
     st->a = res & 0xff;
     st->pc += 1;
 }
@@ -112,8 +124,9 @@ void SUB(State8080 *st, uint8_t byte)
 void SBB(State8080 *st, uint8_t byte)
 {
     uint16_t res = st->a - byte - st->cc.cy;
-    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG);
-    st->cc.cy = ~st->cc.cy;
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG);
+    set_cy_sub(&st->cc, st->a, byte);
+
     st->a = res & 0xff;
     st->pc += 1;
 }
