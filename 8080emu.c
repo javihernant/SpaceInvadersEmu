@@ -64,7 +64,6 @@ void printState(State8080 *st)
 //TODO: check that it works
 void set_flags(ConditionCodes *cc, int result, int size, int flags){
     int mask = (1<<size)-1;
-    result = (result & mask);
     if (flags & Z_FG){
         cc->z = (result & mask) == 0;
     }
@@ -102,12 +101,48 @@ void UnimplementedInstruction(State8080 *state)
     exit(1);
 }
 
+void XR_reg(State8080 *st, uint8_t byte)
+{
+    st->a = st->a ^ byte;
+    set_flags(&st->cc, st->a, 8, Z_FG|S_FG|P_FG|AC_FG);
+    st->cc.cy=0;
+}
+
+void XRI(State8080 *st, uint8_t byte)
+{
+    XR_reg(st, byte);
+    st->pc += 1;
+}
+
+void OR_reg(State8080 *st, uint8_t byte)
+{
+    st->a = st->a | byte;
+    set_flags(&st->cc, st->a, 8, Z_FG|S_FG|P_FG);
+    st->cc.cy=0;
+}
+
+void ORI(State8080 *st, uint8_t byte)
+{
+    OR_reg(st, byte);
+    st->pc += 1;
+}
+
+
 void CPI(State8080 *st, uint8_t byte)
 {
     uint16_t res = st->a - byte;
     set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG);
     set_cy_sub(&st->cc, st->a, byte);
         
+    st->pc += 1;
+}
+
+void ACI(State8080 *st, uint8_t byte)
+{
+
+    uint16_t res = st->a + byte + st->cc.cy;
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG|AC_FG);
+    st->a = res & 0xff;
     st->pc += 1;
 }
 
@@ -842,76 +877,84 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xa8: 
         {
-            state->a = state->a ^ state->b;
-            state->cc.z = ((state->a&0xff) == 0);
-            state->cc.s = ((state->a&0x80) != 0);
-            state->cc.p = parity(state->a, 8);
-            state->cc.cy = state->cc.ac = 0;
+            XR_reg(state, state->b);
             break;
         }
         case 0xa9: 
         {
-            state->a = state->a ^ state->c;
-            state->cc.z = ((state->a&0xff) == 0);
-            state->cc.s = ((state->a&0x80) != 0);
-            state->cc.p = parity(state->a, 8);
-            state->cc.cy = state->cc.ac = 0;
+            XR_reg(state, state->c);
             break;
         }
         case 0xaa:
         {
-            state->a = state->a ^ state->d;
-            state->cc.z = ((state->a&0xff) == 0);
-            state->cc.s = ((state->a&0x80) != 0);
-            state->cc.p = parity(state->a, 8);
-            state->cc.cy = state->cc.ac = 0;
+            XR_reg(state, state->d);
             break;
         }
         case 0xab: 
         {
-            state->a = state->a ^ state->e;
-            state->cc.z = ((state->a&0xff) == 0);
-            state->cc.s = ((state->a&0x80) != 0);
-            state->cc.p = parity(state->a, 8);
-            state->cc.cy = state->cc.ac = 0;
+            XR_reg(state, state->e);
             break;
         }
         case 0xac:
         {
-            state->a = state->a ^ state->h;
-            state->cc.z = ((state->a&0xff) == 0);
-            state->cc.s = ((state->a&0x80) != 0);
-            state->cc.p = parity(state->a, 8);
-            state->cc.cy = state->cc.ac = 0;
+            XR_reg(state, state->h);
             break;
         }
         case 0xad:
         {
-            state->a = state->a ^ state->l;
-            state->cc.z = ((state->a&0xff) == 0);
-            state->cc.s = ((state->a&0x80) != 0);
-            state->cc.p = parity(state->a, 8);
-            state->cc.cy = state->cc.ac = 0;
+            XR_reg(state, state->l);
             break;
         }
-        case 0xae: UnimplementedInstruction(state); break;
+        case 0xae:
+        {
+            XR_reg(state, state->memory[state->sp]);
+            break;
+        }
         case 0xaf: 
         {
-            state->a = state->a ^ state->a;
-            state->cc.z = ((state->a&0xff) == 0);
-            state->cc.s = ((state->a&0x80) != 0);
-            state->cc.p = parity(state->a, 8);
-            state->cc.cy = state->cc.ac = 0;
+            XR_reg(state, state->a);
             break;
         }
-        case 0xb0: UnimplementedInstruction(state); break;
+        case 0xb0:
+        {
+            OR_reg(state, state->b);
+            break;
+        }
         case 0xb1: UnimplementedInstruction(state); break;
+        {
+            OR_reg(state, state->c);
+            break;
+        }
         case 0xb2: UnimplementedInstruction(state); break;
+        {
+            OR_reg(state, state->d);
+            break;
+        }
         case 0xb3: UnimplementedInstruction(state); break;
+        {
+            OR_reg(state, state->e);
+            break;
+        }
         case 0xb4: UnimplementedInstruction(state); break;
+        {
+            OR_reg(state, state->h);
+            break;
+        }
         case 0xb5: UnimplementedInstruction(state); break;
+        {
+            OR_reg(state, state->l);
+            break;
+        }
         case 0xb6: UnimplementedInstruction(state); break;
+        {
+            OR_reg(state, state->memory[state->sp]);
+            break;
+        }
         case 0xb7: UnimplementedInstruction(state); break;
+        {
+            OR_reg(state, state->a);
+            break;
+        }
         case 0xb8: UnimplementedInstruction(state); break;
         case 0xb9: UnimplementedInstruction(state); break;
         case 0xba: UnimplementedInstruction(state); break;
@@ -988,7 +1031,11 @@ void Emulate8080Op(State8080 *state)
             state->pc = (opcode[2]<<8) | opcode[1];
             break;
         }
-        case 0xce: UnimplementedInstruction(state); break;
+        case 0xce:
+        {
+            ACI(state, opcode[1]);
+            break;
+        }
         case 0xcf: UnimplementedInstruction(state); break;
         case 0xd0: 
         {
@@ -1023,7 +1070,11 @@ void Emulate8080Op(State8080 *state)
             state->sp -= 2;
             break;
         }
-        case 0xd6: UnimplementedInstruction(state); break;
+        case 0xd6:
+        {
+            SUB(state, opcode[1]);
+            break;
+        }
         case 0xd7: UnimplementedInstruction(state); break;
         case 0xd8: UnimplementedInstruction(state); break;
         case 0xd9: UnimplementedInstruction(state); break;
@@ -1040,7 +1091,11 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xdc: UnimplementedInstruction(state); break;
         case 0xdd: UnimplementedInstruction(state); break;
-        case 0xde: UnimplementedInstruction(state); break;
+        case 0xde:
+        {
+            SBB(state, opcode[1]);
+            break;
+        }
         case 0xdf: UnimplementedInstruction(state); break;
         case 0xe0: UnimplementedInstruction(state); break;
         case 0xe1:
@@ -1100,7 +1155,11 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xec: UnimplementedInstruction(state); break;
         case 0xed: UnimplementedInstruction(state); break;
-        case 0xee: UnimplementedInstruction(state); break;
+        case 0xee:
+        {
+            XRI(state, opcode[1]);
+            break;
+        }
         case 0xef: UnimplementedInstruction(state); break;
         case 0xf0: UnimplementedInstruction(state); break;
         case 0xf1:
@@ -1134,7 +1193,11 @@ void Emulate8080Op(State8080 *state)
             state->sp -= 2;
             break;
         }
-        case 0xf6: UnimplementedInstruction(state); break;
+        case 0xf6:
+        {
+            ORI(state, opcode[1]);
+            break;
+        }
         case 0xf7: UnimplementedInstruction(state); break;
         case 0xf8: UnimplementedInstruction(state); break;
         case 0xf9: UnimplementedInstruction(state); break;
