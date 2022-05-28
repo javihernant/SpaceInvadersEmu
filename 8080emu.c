@@ -400,7 +400,7 @@ void DCX(uint8_t *h, uint8_t *l)
 
 void DCX_sp(uint16_t *sp)
 {
-    *sp += 1;
+    *sp -= 1;
 }
 
 void DAD(State8080 *st, char x) 
@@ -1577,7 +1577,12 @@ void Emulate8080Op(State8080 *state)
             RPE(state);
             break;
         }
-        case 0xe9: UnimplementedInstruction(state); break;
+        case 0xe9:
+        {
+            uint16_t addr = (state->h << 8)| state->l;
+            state->pc = addr;
+            break;
+        }
         case 0xea:
         {
             uint16_t addr = (opcode[2] << 8)| opcode[1];
@@ -1646,7 +1651,12 @@ void Emulate8080Op(State8080 *state)
             RM(state);
             break;
         }
-        case 0xf9: UnimplementedInstruction(state); break;
+        case 0xf9:
+        {
+            uint16_t addr = (state->h << 8)| state->l;
+            state->sp = addr;
+            break;
+        }
         case 0xfa:
         {
             uint16_t addr = (opcode[2] << 8)| opcode[1];
