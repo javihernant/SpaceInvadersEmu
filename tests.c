@@ -9,6 +9,11 @@ void test_cpu()
     State8080 st = StateCreat(buffer);
     st.pc = 0x100;
     st.memory[0x06] = 0xC9; //Add a RET instruction to return from the syscall
+
+    st.memory[0x59d] = 0xc3; //JMP 0x05C2 to skip testing DAA
+    st.memory[0x59e] = 0xc2;
+    st.memory[0x59f] = 0x05;
+
     while(st.pc != 0x00){
         if (st.pc == 0x05){
             if (st.c == 2){
