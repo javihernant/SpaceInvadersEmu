@@ -451,11 +451,31 @@ void LXI_SP(uint16_t *sp, uint8_t sp_h, uint8_t sp_l, uint16_t *pc)
     *pc += 2;
 }
 
-void PUSH(uint8_t h, uint8_t l, uint8_t *mem, uint16_t *sp)
+void PUSH(uint8_t *mem, uint8_t h, uint8_t l, uint16_t *sp)
 {
     mem[*sp-1] = h;
     mem[*sp-2] = l;
     *sp -= 2;
+}
+
+void POP(uint8_t *mem, uint8_t *h, uint8_t *l, uint16_t *sp)
+{
+    *h = mem[*sp+1];
+    *l = mem[*sp];
+    *sp += 2;
+}
+
+
+void POP_psw(uint8_t *mem, uint8_t *a, ConditionCodes *cc, uint16_t *sp)
+{
+    *a = mem[*sp + 1];
+    uint8_t flags = mem[*sp];
+    cc->z = flags & 0x01;
+    cc->s = (flags>>1) & 0x01;
+    cc->p = (flags>>2) & 0x01;
+    cc->cy = (flags>>3) & 0x01;
+    cc->ac = (flags>>4) & 0x01;
+    *sp += 2;
 }
 
 void DI(uint8_t *ints)
@@ -1382,9 +1402,7 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xc1:
         {
-            state->b = state->memory[state->sp+1];
-            state->c = state->memory[state->sp];
-            state->sp += 2;
+            POP(state->memory, &state->b, &state->c, &state->sp);
             break;
         }
         case 0xc2:
@@ -1409,9 +1427,7 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xc5:
         {
-            state->memory[state->sp-1] = state->b;
-            state->memory[state->sp-2] = state->c;
-            state->sp -= 2;
+            PUSH(state->memory, state->b, state->c, &state->sp);
             break;
         }
         case 0xc6:
@@ -1460,9 +1476,7 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xd1:
         {
-            state->d = state->memory[state->sp+1];
-            state->e = state->memory[state->sp];
-            state->sp += 2;
+            POP(state->memory, &state->d, &state->e, &state->sp);
             break;
         }
         case 0xd2:
@@ -1483,9 +1497,7 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xd5:
         {
-            state->memory[state->sp-1] = state->d;
-            state->memory[state->sp-2] = state->e;
-            state->sp -= 2;
+            PUSH(state->memory, state->d, state->e, &state->sp);
             break;
         }
         case 0xd6:
@@ -1530,9 +1542,7 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xe1:
         {
-            state->h = state->memory[state->sp+1];
-            state->l = state->memory[state->sp];
-            state->sp += 2;
+            POP(state->memory, &state->h, &state->l, &state->sp);
             break;
         }
         case 0xe2:
@@ -1553,9 +1563,7 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xe5:
         {
-            state->memory[state->sp-1] = state->h;
-            state->memory[state->sp-2] = state->l;
-            state->sp -= 2;
+            PUSH(state->memory, state->h, state->l, &state->sp);
             break;
         }
         case 0xe6:
@@ -1605,16 +1613,7 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xf1:
         {
-            uint8_t cc = state->memory[state->sp];
-            state->a = state->memory[state->sp+1];
-
-            state->cc.z = (cc)&1;
-            state->cc.s = (cc>>1)&1;
-            state->cc.p = (cc>>2)&1;
-            state->cc.cy = (cc>>3)&1;
-            state->cc.ac = (cc>>4)&1;
-
-            state->sp += 2;
+            POP_psw(state->memory, &state->a, &state->cc, &state->sp);
             break;
         }
         case 0xf2:
@@ -1631,11 +1630,9 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xf5: 
         {
-            uint8_t psw = (state->cc.z) | (state->cc.s<<1) | (state->cc.p<<2) | (state->cc.cy<<3) |
-            (state->cc.ac<<4); 
-            state->memory[state->sp-1] = state->a;
-            state->memory[state->sp-2] = psw;
-            state->sp -= 2;
+            uint8_t flags = (state->cc.z) | (state->cc.s<<1) | (state->cc.p<<2) | (state->cc.cy<<3) |
+            (state->cc.ac<<4);
+            PUSH(state->memory, state->a, flags, &state->sp);
             break;
         }
         case 0xf6:
