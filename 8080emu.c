@@ -211,7 +211,7 @@ void ANI(State8080 *st, uint8_t byte)
     st->pc += 1;
 }
 
-void XR_reg(State8080 *st, uint8_t byte)
+void XRA(State8080 *st, uint8_t byte)
 {
     st->a = st->a ^ byte;
     set_flags(&st->cc, st->a, 8, Z_FG|S_FG|P_FG|AC_FG);
@@ -220,30 +220,34 @@ void XR_reg(State8080 *st, uint8_t byte)
 
 void XRI(State8080 *st, uint8_t byte)
 {
-    XR_reg(st, byte);
+    XRA(st, byte);
     st->pc += 1;
 }
 
-void OR_reg(State8080 *st, uint8_t byte)
+void ORA(State8080 *st, uint8_t byte)
 {
     st->a = st->a | byte;
-    set_flags(&st->cc, st->a, 8, Z_FG|S_FG|P_FG);
+    set_flags(&st->cc, st->a, 8, Z_FG|S_FG|P_FG|AC_FG);
     st->cc.cy=0;
 }
 
 void ORI(State8080 *st, uint8_t byte)
 {
-    OR_reg(st, byte);
+    ORA(st, byte);
     st->pc += 1;
 }
 
 
-void CPI(State8080 *st, uint8_t byte)
+void CMP(State8080 *st, uint8_t byte)
 {
     uint16_t res = st->a - byte;
-    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG);
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|AC_FG);
     set_cy_sub(&st->cc, st->a, byte);
-        
+}
+
+void CPI(State8080 *st, uint8_t byte)
+{
+    CMP(st, byte);        
     st->pc += 1;
 }
 
@@ -258,7 +262,7 @@ void ACI(State8080 *st, uint8_t byte)
 void ADD(State8080 *st, uint8_t byte)
 {
     uint16_t res = st->a + byte;
-    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG);
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG|AC_FG);
     
     st->a = res & 0xff;
 }
@@ -266,7 +270,7 @@ void ADD(State8080 *st, uint8_t byte)
 void ADC(State8080 *st, uint8_t byte)
 {
     uint16_t res = st->a + byte + st->cc.cy;
-    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG);
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG|AC_FG);
     
     st->a = res & 0xff;
 }
@@ -279,7 +283,7 @@ void ADI(State8080 *st, uint8_t byte)
 void SUB(State8080 *st, uint8_t byte)
 {
     uint16_t res = st->a - byte;
-    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG);
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|AC_FG);
     set_cy_sub(&st->cc, st->a, byte);
     
     st->a = res & 0xff;
@@ -288,7 +292,7 @@ void SUB(State8080 *st, uint8_t byte)
 void SBB(State8080 *st, uint8_t byte)
 {
     uint16_t res = st->a - byte - st->cc.cy;
-    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG);
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|AC_FG);
     set_cy_sub(&st->cc, st->a, byte);
 
     st->a = res & 0xff;
@@ -373,37 +377,30 @@ void RNZ(State8080 *st)
     }
 }
 
-void INX(State8080 *st, char x)
+void INX(uint8_t *h, uint8_t *l)
 {
     uint16_t new;
-    switch(x){
-        case 'B':
-        {
-            new = (st->b<<8) | st->c;
-            st->b = ((new+1)>>8) & 0xff;
-            st->c = ((new+1)) & 0xff;
-            break;
-        }
-        case 'D':
-        {
-            new = (st->d<<8) | st->e;
-            st->d = ((new+1)>>8) & 0xff;
-            st->e = ((new+1)) & 0xff;
-            break;
-        }
-        case 'H':
-        {
-            new = (st->h<<8) | st->l;
-            st->h = ((new+1)>>8) & 0xff;
-            st->l = (new+1) & 0xff;
-            break;
-        }
-        case 'S': //SP
-        {
-            st->sp+=1;
-            break;
-        }
-    }
+    new = (*h<<8) | *l;
+    *h = ((new+1)>>8) & 0xff;
+    *l = (new+1) & 0xff;
+}
+
+void INX_sp(uint16_t *sp)
+{
+    *sp += 1;
+}
+
+void DCX(uint8_t *h, uint8_t *l)
+{
+    uint16_t new;
+    new = (*h<<8) | *l;
+    *h = ((new-1)>>8) & 0xff;
+    *l = (new-1) & 0xff;
+}
+
+void DCX_sp(uint16_t *sp)
+{
+    *sp += 1;
 }
 
 void DAD(State8080 *st, char x) 
@@ -419,17 +416,17 @@ void DAD(State8080 *st, char x)
         }
         case 'D':
         {
-            aux = (st->b<<8) | st->c;
+            aux = (st->d<<8) | st->e;
             break;
         }
         case 'H':
         {
-            aux = (st->b<<8) | st->c;
+            aux = (st->h<<8) | st->l;
             break;
         }
         case 'S': //SP
         {
-            aux = (st->b<<8) | st->c;
+            aux = st->sp;
             break;
         }
     }
@@ -549,6 +546,77 @@ void XTHL(State8080 *st)
     mem[1] = tmp_h;
     mem[0] = tmp_l;
 }
+
+void LHLD(State8080 *st, uint16_t addr)
+{
+    st->h = st->memory[addr+1];
+    st->l = st->memory[addr];
+    st->pc += 2;
+}
+
+void SHLD(State8080 *st, uint16_t addr)
+{
+    st->memory[addr] = st->l;
+    st->memory[addr+1] = st->h;
+    st->pc += 2;
+}
+
+void MOV(uint8_t *reg, uint8_t byte)
+{
+    *reg = byte;
+}
+
+void LDAX(uint8_t *reg, uint8_t byte)
+{
+    MOV(reg, byte);
+}
+
+void STAX(uint8_t *reg, uint8_t byte)
+{
+    MOV(reg, byte);
+}
+
+void RLC(State8080 *st)
+{
+    uint8_t b7 = ((st->a & 0x80) >> 7) & 0x01;
+    st->a = ((st->a << 1) & 0xFE) | b7;
+    st->cc.cy = b7;
+}
+
+void RRC(State8080 *st)
+{
+    uint8_t b0 = st->a & 0x01;
+    st->a = ((st->a >> 1) & 0xEF) | (b0<<7);
+    st->cc.cy = b0;
+}
+
+void RAL(State8080 *st)
+{
+    uint8_t b7 = ((st->a & 0x80) >> 7) & 0x01;
+    st->a = ((st->a << 1) & 0xFE) | st->cc.cy;
+    st->cc.cy = b7;
+}
+void RAR(State8080 *st)
+{
+    uint8_t b0 = st->a & 0x01;
+    st->a = ((st->a >> 1) & 0xEF) | (st->cc.cy<<7);
+    st->cc.cy = b0;
+}
+
+//AC_FG not implemented. DAA not going to be implemented anytime soon
+void DAA(State8080 *st)
+{
+    uint8_t h = (st->a & 0xf0)>>4;
+    uint8_t l = st->a & 0x0f;
+    if (l > 9 || st->cc.ac){
+        l += 6;
+    }
+    if (h > 9 || st->cc.cy){
+        h += 6;
+    }
+    //set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG|AC_FG);
+
+}
 /////////////////////////////////////////////////////
 
 void Emulate8080Op(State8080 *state)
@@ -562,10 +630,15 @@ void Emulate8080Op(State8080 *state)
         case 0x01:
             LXI(&state->b, &state->c, opcode[2], opcode[1], &state->pc);
             break;
-        case 0x02: UnimplementedInstruction(state); break;
+        case 0x02:
+        {
+            uint16_t offset = (state->b << 8) | state->c;
+            STAX(&state->memory[offset], state->a);
+            break;
+        }
         case 0x03:
         {
-            INX(state, 'B');
+            INX(&state->b, &state->c);
             break;
         }
         case 0x04:
@@ -583,7 +656,11 @@ void Emulate8080Op(State8080 *state)
             MVI(&state->b,opcode[1], &state->pc);
             break;
         }
-        case 0x07: UnimplementedInstruction(state); break;
+        case 0x07:
+        {
+            RLC(state);
+            break;
+        }
         case 0x08: UnimplementedInstruction(state); break;
         case 0x09:
         {
@@ -591,8 +668,17 @@ void Emulate8080Op(State8080 *state)
             break;
         }
           
-        case 0x0a: UnimplementedInstruction(state); break;
-        case 0x0b: UnimplementedInstruction(state); break;
+        case 0x0a:
+        {
+            uint16_t offset = (state->b << 8) | (state->c);
+            LDAX(&state->a, state->memory[offset]);
+            break;
+        }
+        case 0x0b:
+        {
+            DCX(&state->b, &state->c);
+            break;
+        }
         case 0x0c:
         {
             INR(&state->c, &state->cc);
@@ -610,9 +696,7 @@ void Emulate8080Op(State8080 *state)
         }
         case 0x0f:
         {
-            uint8_t bit0 = state->a&1;
-            state->a = (state->a>>1) | bit0<<7;
-            state->cc.cy = bit0;
+            RRC(state);
             break;
         }
         case 0x10: UnimplementedInstruction(state); break;
@@ -621,10 +705,15 @@ void Emulate8080Op(State8080 *state)
             LXI(&state->d, &state->e, opcode[2], opcode[1], &state->pc);
             break;
         }
-        case 0x12: UnimplementedInstruction(state); break;
+        case 0x12:
+        {
+            uint16_t offset = (state->d << 8) | state->e;
+            STAX(&state->memory[offset], state->a);
+            break;
+        }
         case 0x13:
         {
-            INX(state, 'D');
+            INX(&state->d, &state->e);
             break;
         }
         case 0x14:
@@ -642,7 +731,11 @@ void Emulate8080Op(State8080 *state)
             MVI(&state->d,opcode[1], &state->pc);
             break;
         }
-        case 0x17: UnimplementedInstruction(state); break;
+        case 0x17:
+        {
+            RAL(state);
+            break;
+        }
         case 0x18: UnimplementedInstruction(state); break;
         case 0x19:
         {
@@ -651,11 +744,15 @@ void Emulate8080Op(State8080 *state)
         }
         case 0x1a: 
         {
-            uint16_t adr = (state->d<<8) | state->e;
-            state->a = state->memory[adr];
+            uint16_t offset = (state->d << 8) | (state->e);
+            LDAX(&state->a, state->memory[offset]);
             break;
         }
-        case 0x1b: UnimplementedInstruction(state); break;
+        case 0x1b:
+        {
+            DCX(&state->d, &state->e);
+            break;
+        }
         case 0x1c:
         {
             INR(&state->e, &state->cc);
@@ -671,17 +768,26 @@ void Emulate8080Op(State8080 *state)
             MVI(&state->e,opcode[1], &state->pc);
             break;
         }
-        case 0x1f: UnimplementedInstruction(state); break;
+        case 0x1f:
+        {
+            RAR(state);
+            break;
+        }
         case 0x20: UnimplementedInstruction(state); break;
         case 0x21: 
         {
             LXI(&state->h, &state->l, opcode[2], opcode[1], &state->pc);
             break;
         }
-        case 0x22: UnimplementedInstruction(state); break;
+        case 0x22:
+        {
+            uint16_t addr = (opcode[2]<<8) | opcode[1];
+            SHLD(state, addr);
+            break;
+        }
         case 0x23: 
         {
-            INX(state, 'H');
+            INX(&state->h, &state->l);
             break;
         }
         case 0x24: 
@@ -706,8 +812,17 @@ void Emulate8080Op(State8080 *state)
             DAD(state, 'H');
             break;
         }
-        case 0x2a: UnimplementedInstruction(state); break;
-        case 0x2b: UnimplementedInstruction(state); break;
+        case 0x2a:
+        {
+            uint16_t addr = (opcode[2]<<8) | opcode[1];
+            LHLD(state, addr);
+            break;
+        }
+        case 0x2b:
+        {
+            DCX(&state->h, &state->l);
+            break;
+        }
         case 0x2c:
         {
             INR(&state->l, &state->cc);
@@ -723,7 +838,7 @@ void Emulate8080Op(State8080 *state)
             MVI(&state->l,opcode[1], &state->pc);
             break;
         }
-        case 0x2f: UnimplementedInstruction(state); break;
+        case 0x2f: state->a = ~state->a; break;
         case 0x30: UnimplementedInstruction(state); break;
         case 0x31: 
         {
@@ -739,7 +854,7 @@ void Emulate8080Op(State8080 *state)
         }
         case 0x33:
         {
-            INX(state, 'S');
+            INX_sp(&state->sp);
             break;
         }
         case 0x34:
@@ -758,7 +873,11 @@ void Emulate8080Op(State8080 *state)
             MVI(&state->memory[offset],opcode[1], &state->pc);
             break;
         }
-        case 0x37: UnimplementedInstruction(state); break;
+        case 0x37:
+        {
+            state->cc.cy = 1;
+            break;
+        }
         case 0x38: UnimplementedInstruction(state); break;
         case 0x39:
         {
@@ -773,7 +892,11 @@ void Emulate8080Op(State8080 *state)
             state->pc += 2;
             break;
         }
-        case 0x3b: UnimplementedInstruction(state); break;
+        case 0x3b:
+        {
+            DCX_sp(&state->sp);
+            break;
+        }
         case 0x3c:
         {
             INR(&state->a, &state->cc);
@@ -789,7 +912,7 @@ void Emulate8080Op(State8080 *state)
             MVI(&state->a,opcode[1], &state->pc);
             break;
         }
-        case 0x3f: UnimplementedInstruction(state); break;
+        case 0x3f: state->cc.cy = !state->cc.cy; break;
         case 0x40: state->b = state->b; break;
         case 0x41: state->b = state->c; break;
         case 0x42: state->b = state->d; break;
@@ -1131,94 +1254,127 @@ void Emulate8080Op(State8080 *state)
         }
         case 0xa8: 
         {
-            XR_reg(state, state->b);
+            XRA(state, state->b);
             break;
         }
         case 0xa9: 
         {
-            XR_reg(state, state->c);
+            XRA(state, state->c);
             break;
         }
         case 0xaa:
         {
-            XR_reg(state, state->d);
+            XRA(state, state->d);
             break;
         }
         case 0xab: 
         {
-            XR_reg(state, state->e);
+            XRA(state, state->e);
             break;
         }
         case 0xac:
         {
-            XR_reg(state, state->h);
+            XRA(state, state->h);
             break;
         }
         case 0xad:
         {
-            XR_reg(state, state->l);
+            XRA(state, state->l);
             break;
         }
         case 0xae:
         {
             uint16_t offset = (state->h << 8) | state->l;
-            XR_reg(state, state->memory[offset]);
+            XRA(state, state->memory[offset]);
             break;
         }
         case 0xaf: 
         {
-            XR_reg(state, state->a);
+            XRA(state, state->a);
             break;
         }
         case 0xb0:
         {
-            OR_reg(state, state->b);
+            ORA(state, state->b);
             break;
         }
         case 0xb1:
         {
-            OR_reg(state, state->c);
+            ORA(state, state->c);
             break;
         }
         case 0xb2:
         {
-            OR_reg(state, state->d);
+            ORA(state, state->d);
             break;
         }
         case 0xb3:
         {
-            OR_reg(state, state->e);
+            ORA(state, state->e);
             break;
         }
         case 0xb4:
         {
-            OR_reg(state, state->h);
+            ORA(state, state->h);
             break;
         }
         case 0xb5:
         {
-            OR_reg(state, state->l);
+            ORA(state, state->l);
             break;
         }
         case 0xb6:
         {
             uint16_t offset = (state->h << 8) | state->l;
-            OR_reg(state, state->memory[offset]);
+            ORA(state, state->memory[offset]);
             break;
         }
         case 0xb7:
         {
-            OR_reg(state, state->a);
+            ORA(state, state->a);
             break;
         }
-        case 0xb8: UnimplementedInstruction(state); break;
-        case 0xb9: UnimplementedInstruction(state); break;
-        case 0xba: UnimplementedInstruction(state); break;
-        case 0xbb: UnimplementedInstruction(state); break;
-        case 0xbc: UnimplementedInstruction(state); break;
-        case 0xbd: UnimplementedInstruction(state); break;
-        case 0xbe: UnimplementedInstruction(state); break;
-        case 0xbf: UnimplementedInstruction(state); break;
+        case 0xb8:
+        {
+            CMP(state, state->b);
+            break;
+        }
+        case 0xb9:
+        {
+            CMP(state, state->c);
+            break;
+        }
+        case 0xba:
+        {
+            CMP(state, state->d);
+            break;
+        }
+        case 0xbb:
+        {
+            CMP(state, state->e);
+            break;
+        }
+        case 0xbc:
+        {
+            CMP(state, state->h);
+            break;
+        }
+        case 0xbd:
+        {
+            CMP(state, state->l);
+            break;
+        }
+        case 0xbe:
+        {
+            uint16_t offset = (state->h << 8) | state->l;
+            CMP(state, state->memory[offset]);
+            break;
+        }
+        case 0xbf:
+        {
+            CMP(state, state->a);
+            break;
+        }
         case 0xc0:
         {
             RNZ(state);
