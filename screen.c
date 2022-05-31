@@ -71,7 +71,6 @@ int init_screen(unsigned char *vram, int width, int height)
 
 int render_bf_2(unsigned char *vram)
 {
-
     bit2byte_parse(vram);
     SDL_UpdateTexture(g_texture, NULL, (void *) g_buffer, g_width);
     SDL_RenderClear(g_renderer);

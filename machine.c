@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "regs.h"
 #include "machine.h"
+#include "8080emu.h"
 #include <stdint.h> 
 
 static uint8_t shift_offset;
@@ -77,4 +78,11 @@ void machine_out(State8080 *st, int port)
         break;
     }
     st->pc += 1;
+}
+
+void gen_int(State8080 *st, int num)
+{
+    uint16_t adr = 8*num;
+    st->pc += 1;
+    CALL(st, (adr>>8)&0xff, adr&0xff);
 }

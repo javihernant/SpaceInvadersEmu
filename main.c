@@ -23,9 +23,23 @@ void run_cpu(char *path)
     init_screen(vram, 256, 224);
     SDL_Event e;
 
+    unsigned int last_time = 0;
+    unsigned int curr_time;
+    int interr = 1;
+
     int running = 1;
     while (running)
     {
+        curr_time = SDL_GetTicks();
+        if (curr_time>last_time + 16)
+        {
+            if (state.int_enable){
+                last_time = curr_time;
+                gen_int(&state, interr);
+                interr = interr == 1 ? 2 : 1;
+                //render_bf_2(vram);
+            }
+        }
 
 		while(SDL_PollEvent(&e) != 0){
 			if(e.type == SDL_QUIT){
@@ -36,7 +50,6 @@ void run_cpu(char *path)
         Emulate8080Op(&state);
 
         //printState(&state);
-        render_bf_2(vram);
     }
 
     screen_off();
