@@ -20,34 +20,51 @@ void run_cpu(char *path)
     unsigned char *vram = &buffer[0x2400];
 
     State8080 state = StateCreat(buffer);
-    init_screen(vram, 256, 224);
+    init_screen(vram,224, 256);
     SDL_Event e;
 
-    unsigned int last_time = 0;
-    unsigned int curr_time;
+    
+    unsigned int t0, t1, dt;
+    int exed; //cycles already executed in current frame
     int interr = 1;
 
     int running = 1;
+    t0 = SDL_GetTicks();
     while (running)
     {
-        curr_time = SDL_GetTicks();
-        if (curr_time>last_time + 16)
-        {
-            if (state.int_enable){
-                last_time = curr_time;
-                gen_int(&state, interr);
-                interr = interr == 1 ? 2 : 1;
-                //render_bf_2(vram);
-            }
+        //Call Emulate until frame is done (how do I check for that?). Then delay for 16ms
+        //For every frame, execute 33334 (2MHZ; 2000000 cycles per second; refresh rate 60HZ (60 fps); each frame
+        //execute 2000000/60 cycles)
+
+        exed = 0;
+        while (exed < 33334){
+            exed += Emulate8080Op(&state);
         }
 
-		while(SDL_PollEvent(&e) != 0){
+        if (state.int_enable){
+           gen_int(&state, interr);
+           interr = interr == 1 ? 2 : 1;
+        }
+
+        /*
+        while(SDL_PollEvent(&e) != 0){
 			if(e.type == SDL_QUIT){
 				running = 0;
 			}
 		}
+        */
 
-        Emulate8080Op(&state);
+        render_bf_2(vram);
+        t1 = SDL_GetTicks();
+        dt = t1-t0;
+
+        if (dt <= 16){
+            SDL_Delay(16-dt);
+            t0 += 16;
+        }else{
+            //Too slow
+            t0 = t1;
+        }
 
         //printState(&state);
     }

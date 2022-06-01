@@ -9,8 +9,8 @@ static SDL_Renderer *g_renderer;
 static SDL_Texture *g_texture;
 //const static int g_width = 256;
 //const static int g_height = 224;
-static int g_width = 256;
-static int g_height = 224;
+static int g_height = 256;
+static int g_width = 224;
 
 int bit2byte_parse(unsigned char *src);
 
@@ -123,7 +123,8 @@ int bit2byte_parse_test(unsigned char *src)
             bit_mask = (1 << (7-(j%8))) & 0xff;
             //byte = src[((g_width-1-j)*g_height)/8+(g_height-1-i)/8];
             byte = src[i*g_height/8+j/8];
-            g_buffer[i*g_height + j] = (byte & bit_mask) != 0 ? 0xff: 0x00;
+            byte = i;
+            g_buffer[i*g_height + j] = (((byte & bit_mask) != 0) ? 0xff: 0x00);
         }
 
     }
@@ -140,8 +141,9 @@ int bit2byte_parse(unsigned char *src)
     {
         for (int j=0; j<g_height; j++){
             
-            bit_mask = (1 << (7-(j%8))) & 0xff;
+            bit_mask = (1 << (j%8)) & 0xff;
             byte = src[i*g_height/8+j/8];
+            //byte = i;
             g_buffer[((g_height-1-j)*g_width) + i] = (byte & bit_mask) != 0 ? 0xff: 0x00;
         }
 
