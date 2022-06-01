@@ -18,7 +18,7 @@ static uint8_t shift_val = 0;
 
 unsigned char *load_rom(char *rom_path, int offset)
 {
-    unsigned char *mem = calloc(0x4000, 1);
+    unsigned char *mem = malloc(0x4000);
     FILE *f= fopen(rom_path, "rb");
     if (f==NULL)
     {
@@ -82,7 +82,7 @@ void machine_out(State8080 *st, int port)
 
 void gen_int(State8080 *st, int num)
 {
-    uint16_t adr = 8*num;
-    st->pc += 1;
-    CALL(st, (adr>>8)&0xff, adr&0xff);
+    st->int_enable = 0;
+    PUSH(st->memory, (st->pc&0xff00)>>8, st->pc&0xff, &st->sp);
+    st->pc = num*8;
 }

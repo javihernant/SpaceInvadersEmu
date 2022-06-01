@@ -12,5 +12,5 @@ void UnimplementedInstruction(State8080 *state);
 int Emulate8080Op(State8080 *state);
 int Disassemble8080Op(unsigned char *codebuffer, int pc);
 
-void CALL(State8080 *st, uint8_t h, uint8_t l);
+void PUSH(uint8_t *mem, uint8_t h, uint8_t l, uint16_t *sp);
 #endif
