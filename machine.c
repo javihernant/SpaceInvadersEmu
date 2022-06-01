@@ -43,19 +43,19 @@ unsigned char *load_rom(char *rom_path, int offset)
 void machine_in(State8080 *st, int port)
 {
     switch(port){
-        case 0:
+        case 1:
         {
             st->a = 1;
             break;
         }
-        case 1:
+        case 2:
         {
             st->a = 0;
             break;
         }
         case 3:
         {
-            st->a = shift_val >> (8-shift_offset) ;
+            st->a = shift_val >> (8-shift_offset);
             break;
         }
     }
