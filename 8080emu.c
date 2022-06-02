@@ -606,7 +606,7 @@ void RLC(State8080 *st)
 void RRC(State8080 *st)
 {
     uint8_t b0 = st->a & 0x01;
-    st->a = ((st->a >> 1) & 0xEF) | (b0<<7);
+    st->a = ((st->a >> 1) & 0x7F) | (b0<<7);
     st->cc.cy = b0;
 }
 
@@ -619,7 +619,7 @@ void RAL(State8080 *st)
 void RAR(State8080 *st)
 {
     uint8_t b0 = st->a & 0x01;
-    st->a = ((st->a >> 1) & 0xEF) | (st->cc.cy<<7);
+    st->a = ((st->a >> 1) & 0x7F) | (st->cc.cy<<7);
     st->cc.cy = b0;
 }
 
