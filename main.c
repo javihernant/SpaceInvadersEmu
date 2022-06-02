@@ -46,13 +46,13 @@ void run_cpu(char *path)
            interr = interr == 1 ? 2 : 1;
         }
 
-        /*
+        
         while(SDL_PollEvent(&e) != 0){
 			if(e.type == SDL_QUIT){
 				running = 0;
 			}
 		}
-        */
+        
 
         render_bf_2(vram);
         t1 = SDL_GetTicks();
