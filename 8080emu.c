@@ -994,7 +994,7 @@ int Emulate8080Op(State8080 *state)
             state->d = state->memory[offset]; 
             break;
         }
-        case 0x57: state->e = state->a; break;
+        case 0x57: state->d = state->a; break;
         case 0x58: state->e = state->b; break;
         case 0x59: state->e = state->c; break;
         case 0x5a: state->e = state->d; break;
@@ -1007,7 +1007,7 @@ int Emulate8080Op(State8080 *state)
             state->e = state->memory[offset]; 
             break;
         }
-        case 0x5f: state->h = state->a; break;
+        case 0x5f: state->e = state->a; break;
         case 0x60: state->h = state->b; break;
         case 0x61: state->h = state->c; break;
         case 0x62: state->h = state->d; break;
