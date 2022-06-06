@@ -7,6 +7,8 @@
 
 static uint8_t shift_offset;
 static uint16_t shift_val = 0;
+static uint8_t in_port1 = 0;
+static uint8_t in_port2 = 0;
 
 /* SPACE INVADERS MEMORY MAP:
 
@@ -43,14 +45,19 @@ unsigned char *load_rom(char *rom_path, int offset)
 void machine_in(State8080 *st, int port)
 {
     switch(port){
+        case 0:
+        {
+            st->a = 0xff;
+            break;
+        }
         case 1:
         {
-            st->a = 1;
+            st->a = in_port1;
             break;
         }
         case 2:
         {
-            st->a = 0;
+            st->a = in_port2;
             break;
         }
         case 3:
@@ -84,4 +91,81 @@ void gen_int(State8080 *st, int num)
     st->int_enable = 0;
     PUSH(st->memory, (st->pc&0xff00)>>8, st->pc&0xff, &st->sp);
     st->pc = num*8;
+}
+
+void handle_keys(SDL_Event *e)
+{
+    if (e->type == SDL_KEYDOWN){
+        switch(e->key.keysym.sym){
+            case SDLK_c:
+            {
+                in_port1 |= 0x01;
+                break;
+            }
+            case SDLK_2:
+            {
+                in_port1 |= 0x02;
+                break;
+            }
+            case SDLK_1:
+            {
+                in_port1 |= 0x04;
+                break;
+            }
+            case SDLK_a:
+            {
+                in_port1 |= 0x20;
+                in_port2 |= 0x20;
+                break;
+            }
+            case SDLK_j:
+            {
+                in_port1 |= 0x10;
+                in_port2 |= 0x10;
+                break;
+            }
+            case SDLK_d:
+            {
+                in_port1 |= 0x40;
+                in_port2 |= 0x40;
+                break;
+            }
+        }
+    }else if (e->type == SDL_KEYUP){
+        switch(e->key.keysym.sym){
+            case SDLK_c:
+            {
+                in_port1 &= ~0x01;
+                break;
+            }
+            case SDLK_2:
+            {
+                in_port1 &= ~0x02;
+                break;
+            }
+            case SDLK_1:
+            {
+                in_port1 &= ~0x04;
+                break;
+            }
+            case SDLK_a:
+            {
+                in_port1 &= ~0x20;
+                in_port2 &= ~0x20;
+                break;
+            }
+            case SDLK_d:
+            {
+                in_port1 &= ~0x40;
+                in_port2 &= ~0x40;
+                break;
+            }
+            case SDLK_j:
+            {
+                in_port1 &= ~0x10;
+                in_port2 &= ~0x10;
+                break;
+            }
+        }
+    }
 }

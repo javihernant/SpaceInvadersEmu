@@ -666,7 +666,7 @@ unsigned char cycles8080[] = {
 
 int Emulate8080Op(State8080 *state)
 {
-    Disassemble8080Op(state->memory, state->pc);
+    //Disassemble8080Op(state->memory, state->pc);
     unsigned char *opcode = &state->memory[state->pc];
     int cycles = cycles8080[*opcode];
     state->pc += 1; 
@@ -851,7 +851,7 @@ int Emulate8080Op(State8080 *state)
             MVI(&state->h,opcode[1], &state->pc);
             break;
         }
-        case 0x27: UnimplementedInstruction(state); break;
+        case 0x27: DAA(state); break;
         case 0x28: UnimplementedInstruction(state); break;
         case 0x29: 
         {
