@@ -623,18 +623,21 @@ void RAR(State8080 *st)
     st->cc.cy = b0;
 }
 
-//AC_FG not implemented. DAA not going to be implemented anytime soon
+//AC_FG not implemented. DAA is implemented partially only.
 void DAA(State8080 *st)
 {
-    uint8_t h = (st->a & 0xf0)>>4;
-    uint8_t l = st->a & 0x0f;
-    if (l > 9 || st->cc.ac){
-        l += 6;
+    uint16_t res = st->a;
+    if ((st->a & 0x0f) > 0x09){
+        res += 0x09;
     }
-    if (h > 9 || st->cc.cy){
-        h += 6;
+    
+    if ((st->a & 0xf0) > 0x90){
+        res += 0x90;
     }
-    //set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG|AC_FG);
+
+    set_flags(&st->cc, res, 8, Z_FG|S_FG|P_FG|CY_FG|AC_FG);
+
+    st->a = res & 0xff;
 
 }
 /////////////////////////////////////////////////////
