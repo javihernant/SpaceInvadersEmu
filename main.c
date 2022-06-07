@@ -33,10 +33,13 @@ void run_cpu(char *path)
     while (running)
     {
         while(SDL_PollEvent(&e)){
-			if(e.type == SDL_QUIT){
+			if(e.type == SDL_QUIT || e.key.keysym.sym == SDLK_q){
 				running = 0;
-			}
-            handle_keys(&e);
+			}else if(e.key.keysym.sym == SDLK_f && e.type == SDL_KEYDOWN){
+                toggle_fs();
+            }else{
+                handle_keys(&e);
+            }
 		}
         //Call Emulate until frame is done (how do I check for that?). Then delay for 16ms
         //For every frame, execute 33334 (2MHZ; 2000000 cycles per second; refresh rate 60HZ (60 fps); each frame

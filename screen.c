@@ -13,7 +13,6 @@ int bit2byte_parse(unsigned char *src);
 
 int init_SDL()
 {
-    
 	if (SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO ) < 0){
 		printf("Error initializing SDL! SDL_Error:%s", SDL_GetError() );
 		return 1;
@@ -140,6 +139,18 @@ int init_screen(unsigned char *vram, int width, int height)
  
     return 0;
 }
+
+int toggle_fs()
+{
+    static int flag = SDL_WINDOW_FULLSCREEN;
+    if (SDL_SetWindowFullscreen(g_window, flag) < 0){
+        printf("SDL_SetWindowFullScreen: %s\n", SDL_GetError());
+        exit(1);
+    }
+    flag = flag == 0 ? SDL_WINDOW_FULLSCREEN : 0;
+    return 0;
+}
+ 
 
 int render_bf_2(unsigned char *vram)
 {
