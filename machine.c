@@ -109,34 +109,31 @@ void gen_int(State8080 *st, int num)
 
 void handle_sound(uint8_t a, int port)
 {
-    static int playing = 0;
     if (port == 3){
         if(a != out3_last){
             if ((a & 0x1) != (out3_last & 0x1)){
-                if (!playing){
+                if ((a & 0x1) != 0){
                     if(Mix_PlayChannel(0, sounds[0], -1)==-1) {
                         printf("Mix_PlayChannel: %s\n",Mix_GetError());
                     }
                     //printf("Sound 0\n");
-                    playing=1;
                 }else{
                     Mix_HaltChannel(0);
-                    playing=0;
                 }
             }
-            if ((a & 0x2) != (out3_last & 0x2)){
+            if (((a & 0x2) != (out3_last & 0x2)) && (a & 0x2) != 0){
                 if(Mix_PlayChannel(-1, sounds[1], 0)==-1) {
                     printf("Mix_PlayChannel: %s\n",Mix_GetError());
                 }
                 //printf("Sound 1\n");
             }
-            if ((a & 0x4) != (out3_last & 0x4)){
+            if (((a & 0x4) != (out3_last & 0x4)) && (a & 0x4) != 0){
                 if(Mix_PlayChannel(-1, sounds[2], 0)==-1) {
                     printf("Mix_PlayChannel: %s\n",Mix_GetError());
                 }
                 //printf("Sound 2\n");
             }
-            if ((a & 0x8) != (out5_last & 0x8)){
+            if (((a & 0x8) != (out3_last & 0x8)) && (a & 0x8) != 0){
                 if(Mix_PlayChannel(-1, sounds[3], 0)==-1) {
                     printf("Mix_PlayChannel: %s\n",Mix_GetError());
                 }
@@ -146,31 +143,31 @@ void handle_sound(uint8_t a, int port)
         }
     }else{
         if(a != out5_last){
-            if ((a & 0x1) != (out5_last & 0x1)){
+            if (((a & 0x1) != (out5_last & 0x1)) && (a & 0x1) != 0){
                 if(Mix_PlayChannel(-1, sounds[4], 0)==-1) {
                     printf("Mix_PlayChannel: %s\n",Mix_GetError());
                 }
                 //printf("Sound 4\n");
             }
-            if ((a & 0x2) != (out5_last & 0x2)){
+            if (((a & 0x2) != (out5_last & 0x2)) && (a & 0x2) != 0){
                 if(Mix_PlayChannel(-1, sounds[5], 0)==-1) {
                     printf("Mix_PlayChannel: %s\n",Mix_GetError());
                 }
                 //printf("Sound 5\n");
             }
-            if ((a & 0x4) != (out5_last & 0x4)){
+            if (((a & 0x4) != (out5_last & 0x4)) && (a & 0x4) != 0){
                 if(Mix_PlayChannel(-1, sounds[6], 0)==-1) {
                     printf("Mix_PlayChannel: %s\n",Mix_GetError());
                 }
                 //printf("Sound 6\n");
             }
-            if ((a & 0x8) != (out5_last & 0x8)){
+            if (((a & 0x8) != (out5_last & 0x8)) && (a & 0x8) != 0){
                 if(Mix_PlayChannel(-1, sounds[7], 0)==-1) {
                     printf("Mix_PlayChannel: %s\n",Mix_GetError());
                 }
                 //printf("Sound 7\n");
             }
-            if ((a & 0x10) != (out5_last & 0x10)){
+            if (((a & 0x10) != (out5_last & 0x10)) && (a & 0x10) != 0){
                 if(Mix_PlayChannel(-1, sounds[8], 0)==-1) {
                     printf("Mix_PlayChannel: %s\n",Mix_GetError());
                 }
