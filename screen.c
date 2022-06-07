@@ -152,60 +152,20 @@ int render_bf_2(unsigned char *vram)
     return 0;
 }
 
-int render_bf()
+char what_color(int w, int h)
 {
-    SDL_UpdateTexture(g_texture, NULL, g_buffer, g_width);
-    SDL_RenderClear(g_renderer);
-    SDL_RenderCopy(g_renderer, g_texture, NULL, NULL);
-    SDL_RenderPresent(g_renderer);
-
-    return 0;
-}
-
-void paint_at(unsigned char *vram, int x, int y, int ncols)
-{
-    vram[y*ncols+x] = 0xff;
-}
-
-//recreate vram
-void test_draw(unsigned char *src)
-{
-    for (int j=0; j<g_width; j++){
-        paint_at(src, g_height/8-1, j, g_height/8);
+    if (h<=223 && h>=194){
+        return 0xE0;
+    }else if ((h>=16 && h<=63) || (w>=21 && w<=60 && h<=15 && h>=0)){
+        return 0x1C;
+    }else{
+        return 0xff;
     }
-    /* 
-    for (int i=0; i<=g_height; i++){
-        paint_at(vram, i, 11, g_height);
-    }
-    for (int i=0; i<=g_height; i++){
-        paint_at(vram, i, 12, g_height);
-    }
-    */
-}
-
-int bit2byte_parse_test(unsigned char *src)
-{
-    unsigned char byte;
-    int bit_mask;
-
-    for (int i=0; i<g_width; i++)
-    {
-        for (int j=0; j<g_height; j++){
-
-            bit_mask = (1 << (7-(j%8))) & 0xff;
-            //byte = src[((g_width-1-j)*g_height)/8+(g_height-1-i)/8];
-            byte = src[i*g_height/8+j/8];
-            byte = i;
-            g_buffer[i*g_height + j] = (((byte & bit_mask) != 0) ? 0xff: 0x00);
-        }
-
-    }
-
-    return 0;
 }
 //dest has wxh bytes. src has (wxh)/8 bytes.
 int bit2byte_parse(unsigned char *src)
 {
+    
     unsigned char byte;
     int bit_mask;
     //go through vram, which is transposed (hxw)
@@ -215,8 +175,7 @@ int bit2byte_parse(unsigned char *src)
             
             bit_mask = (1 << (j%8)) & 0xff;
             byte = src[i*g_height/8+j/8];
-            //byte = i;
-            g_buffer[((g_height-1-j)*g_width) + i] = (byte & bit_mask) != 0 ? 0xff: 0x00;
+            g_buffer[((g_height-1-j)*g_width) + i] = (byte & bit_mask) != 0 ? what_color(i, j) : 0;
         }
 
     }
@@ -237,36 +196,3 @@ void screen_off()
     SDL_Quit();
     free(g_buffer);
 }
-
-/*
-int main()
-{
-
-    unsigned char *src = calloc(g_width*g_height/8, 1);
-    test_draw(src);
-    g_buffer = malloc(g_width*g_height);
-    //bit2byte_parse_test(src);
-    bit2byte_parse(src);
-    init_video();
-    render_bf();
-
-    int running = 1;
-    while (running)
-    {
-
-        while(SDL_PollEvent(&g_e) != 0){
-            if(g_e.type == SDL_QUIT){
-                running = 0;
-            }
-        }
-
-    }
-
-    SDL_DestroyTexture(g_texture);
-    SDL_DestroyRenderer(g_renderer);
-    SDL_DestroyWindow(g_window);
-    SDL_Quit();
-
-    return 0;
-}
-*/
