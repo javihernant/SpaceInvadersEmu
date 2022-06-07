@@ -4,11 +4,15 @@
 #include "machine.h"
 #include "8080emu.h"
 #include <stdint.h> 
+#include "SDL2/SDL_mixer.h"
 
 static uint8_t shift_offset;
 static uint16_t shift_val = 0;
 static uint8_t in_port1 = 0;
 static uint8_t in_port2 = 0;
+static uint8_t out3_last = 0;
+static uint8_t out5_last = 0;
+extern Mix_Chunk *sounds[];
 
 /* SPACE INVADERS MEMORY MAP:
 
@@ -77,9 +81,19 @@ void machine_out(State8080 *st, int port)
             shift_offset = (st->a);
             break;
         }
+        case 3:
+        {
+            handle_sound(st->a, 3);
+            break;
+        }
         case 4:
         {
             shift_val = (st->a)<<8 | ((shift_val >> 8) & 0xff); 
+            break;
+        }
+        case 5:
+        {
+            handle_sound(st->a, 5);
             break;
         }
     }
@@ -91,6 +105,80 @@ void gen_int(State8080 *st, int num)
     st->int_enable = 0;
     PUSH(st->memory, (st->pc&0xff00)>>8, st->pc&0xff, &st->sp);
     st->pc = num*8;
+}
+
+void handle_sound(uint8_t a, int port)
+{
+    static int playing = 0;
+    if (port == 3){
+        if(a != out3_last){
+            if ((a & 0x1) != (out3_last & 0x1)){
+                if (!playing){
+                    if(Mix_PlayChannel(0, sounds[0], -1)==-1) {
+                        printf("Mix_PlayChannel: %s\n",Mix_GetError());
+                    }
+                    //printf("Sound 0\n");
+                    playing=1;
+                }else{
+                    Mix_HaltChannel(0);
+                    playing=0;
+                }
+            }
+            if ((a & 0x2) != (out3_last & 0x2)){
+                if(Mix_PlayChannel(-1, sounds[1], 0)==-1) {
+                    printf("Mix_PlayChannel: %s\n",Mix_GetError());
+                }
+                //printf("Sound 1\n");
+            }
+            if ((a & 0x4) != (out3_last & 0x4)){
+                if(Mix_PlayChannel(-1, sounds[2], 0)==-1) {
+                    printf("Mix_PlayChannel: %s\n",Mix_GetError());
+                }
+                //printf("Sound 2\n");
+            }
+            if ((a & 0x8) != (out5_last & 0x8)){
+                if(Mix_PlayChannel(-1, sounds[3], 0)==-1) {
+                    printf("Mix_PlayChannel: %s\n",Mix_GetError());
+                }
+                //printf("Sound 3\n");
+            }
+            out3_last = a;
+        }
+    }else{
+        if(a != out5_last){
+            if ((a & 0x1) != (out5_last & 0x1)){
+                if(Mix_PlayChannel(-1, sounds[4], 0)==-1) {
+                    printf("Mix_PlayChannel: %s\n",Mix_GetError());
+                }
+                //printf("Sound 4\n");
+            }
+            if ((a & 0x2) != (out5_last & 0x2)){
+                if(Mix_PlayChannel(-1, sounds[5], 0)==-1) {
+                    printf("Mix_PlayChannel: %s\n",Mix_GetError());
+                }
+                //printf("Sound 5\n");
+            }
+            if ((a & 0x4) != (out5_last & 0x4)){
+                if(Mix_PlayChannel(-1, sounds[6], 0)==-1) {
+                    printf("Mix_PlayChannel: %s\n",Mix_GetError());
+                }
+                //printf("Sound 6\n");
+            }
+            if ((a & 0x8) != (out5_last & 0x8)){
+                if(Mix_PlayChannel(-1, sounds[7], 0)==-1) {
+                    printf("Mix_PlayChannel: %s\n",Mix_GetError());
+                }
+                //printf("Sound 7\n");
+            }
+            if ((a & 0x10) != (out5_last & 0x10)){
+                if(Mix_PlayChannel(-1, sounds[8], 0)==-1) {
+                    printf("Mix_PlayChannel: %s\n",Mix_GetError());
+                }
+                //printf("Sound 8\n");
+            }
+        }
+            out5_last = a;
+    }
 }
 
 void handle_keys(SDL_Event *e)

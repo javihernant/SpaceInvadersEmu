@@ -2,7 +2,7 @@ SRC_DIR := src
 OBJ_DIR := obj
 BIN_DIR := .
 
-LDLIBS = -lSDL2
+LDLIBS = -lSDL2 -lSDL2_mixer
 SRCS = 8080emu.c main.c machine.c screen.c tests.c
 OBJS = $(SRCS:.c=.o)
 TARG = emulator

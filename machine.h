@@ -8,5 +8,6 @@ void machine_out(State8080 *st, int port);
 unsigned char *load_rom(char *path, int offset);
 void gen_int(State8080 *st, int num);
 void handle_keys(SDL_Event *e);
+void handle_sound(uint8_t a, int port);
 #endif
     
